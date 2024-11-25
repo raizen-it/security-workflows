@@ -13,46 +13,45 @@ jobs:
      - name: 'Checkout Repository'
        uses: actions/checkout@v4
 
-     # Passo 2: Executar Dependency Review
+     # Passo 2: Executar Dependency Review (Saída Redirecionada)
      - name: 'Executar Dependency Review'
-       uses: actions/dependency-review-action@v4
-       with:
-         fail-on-severity: high # Somente vulnerabilidades de alta gravidade
-         output: json           # Salvar a saída em formato JSON
+       run: |
+         actions/dependency-review-action@v4 > dependency-review-output.log || true
 
-     # Passo 3: Verificar se o arquivo foi gerado
-     - name: 'Verificar Existência do Arquivo'
-       run: ls -lh dependency-review-report.json || echo "Arquivo não encontrado!"
+     # Passo 3: Verificar a Existência do Arquivo
+     - name: 'Verificar Existência do Relatório'
+       run: |
+         if [ -f dependency-review-output.log ]; then
+           echo "Arquivo de saída gerado com sucesso!"
+         else
+           echo "Arquivo de saída NÃO encontrado!" && exit 1
+         fi
 
-     # Passo 4: Dividir o arquivo grande em partes menores
+     # Passo 4: Dividir o Relatório em Partes Menores
      - name: 'Dividir Saída em Partes'
        run: |
-         if [ -f dependency-review-report.json ]; then
-           split -b 900k dependency-review-report.json part_
-         else
-           echo "Arquivo dependency-review-report.json não foi encontrado!"
-         fi
-       shell: bash
+         split -b 900k dependency-review-output.log part_
 
-     # Passo 5: Adicionar a primeira parte ao Summary
-     - name: 'Adicionar Primeira Parte ao Summary'
+     # Passo 5: Adicionar Resumo Filtrado ao Summary
+     - name: 'Adicionar Resumo Filtrado'
        run: |
+         echo "### Resumo de Vulnerabilidades Críticas" >> $GITHUB_STEP_SUMMARY
          if [ -f part_aa ]; then
-           echo "### Parte 1 do Resumo" >> $GITHUB_STEP_SUMMARY
-           cat part_aa >> $GITHUB_STEP_SUMMARY
+           grep -i 'high severity' part_aa >> $GITHUB_STEP_SUMMARY || echo "Nenhuma vulnerabilidade crítica encontrada."
          else
-           echo "Nenhuma parte gerada para adicionar ao summary."
+           echo "Nenhuma parte gerada para adicionar ao resumo." >> $GITHUB_STEP_SUMMARY
          fi
 
-     # Passo 6: Salvar as partes restantes como artefatos
-     - name: 'Salvar Partes Restantes como Artefato'
+     # Passo 6: Salvar Relatório Completo como Artefato
+     - name: 'Salvar Relatório Completo como Artefato'
+       uses: actions/upload-artifact@v3
+       with:
+         name: dependency-review-full
+         path: dependency-review-output.log
+
+     # Passo 7: Salvar Partes Divididas como Artefatos
+     - name: 'Salvar Partes Divididas como Artefato'
        uses: actions/upload-artifact@v3
        with:
          name: dependency-review-parts
          path: part_*
-
-     # Passo 7: Adicionar Link para o Artefato no Summary
-     - name: 'Adicionar Link para o Artefato'
-       run: |
-         echo "### Relatório Completo Disponível" >> $GITHUB_STEP_SUMMARY
-         echo "O relatório completo pode ser acessado nos artefatos gerados pelo workflow." >> $GITHUB_STEP_SUMMARY
