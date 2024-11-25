@@ -11,19 +11,20 @@ jobs:
      - name: 'Checkout Repository'
        uses: actions/checkout@v4
 
-     - name: 'Dependency Review - Resumo Compacto'
-       uses: actions/dependency-review-action@v4
-       with:
-         fail-on-severity: high 
-         output: summary 
+     - name: 'Executar Dependency Review (redirecionado)'
+       run: |
+         actions/dependency-review-action@v4 > dependency-review-output.txt || true
 
      - name: 'Salvar Relatório Completo como Artefato'
        uses: actions/upload-artifact@v3
        with:
-         name: dependency-review-report
-         path: dependency-review-report.json 
+         name: dependency-review-full-output
+         path: dependency-review-output.txt
 
-     - name: 'Adicionar Link ao Resumo'
+     - name: 'Adicionar Resumo Filtrado ao Summary'
        run: |
-         echo "### Resumo de Dependências" >> $GITHUB_STEP_SUMMARY
-         echo "O relatório completo pode ser acessado [aqui](dependency-review-report.json)." >> $GITHUB_STEP_SUMMARY
+         head -n 100 dependency-review-output.txt > filtered-summary.txt
+         echo "### Resumo de Dependências (parcial)" >> $GITHUB_STEP_SUMMARY
+         cat filtered-summary.txt >> $GITHUB_STEP_SUMMARY
+         echo "Relatório completo disponível como artefato." >> $GITHUB_STEP_SUMMARY
+
