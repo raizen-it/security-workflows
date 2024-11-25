@@ -12,7 +12,7 @@ jobs:
        uses: actions/dependency-review-action@v4
        with:
          fail-on-severity: high
-         output: json
+         output: json # Salva o resultado como JSON
 
      - name: 'Dividir Saída em Partes'
        run: |
@@ -28,3 +28,4 @@ jobs:
        with:
          name: dependency-review-parts
          path: part_*
+
