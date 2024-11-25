@@ -1,0 +1,29 @@
+name: 'Dependency Review'
+on: [pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+     - name: 'Checkout Repository'
+       uses: actions/checkout@v4
+
+     - name: 'Dependency Review - Resumo Compacto'
+       uses: actions/dependency-review-action@v4
+       with:
+         fail-on-severity: high 
+         output: summary 
+
+     - name: 'Salvar Relatório Completo como Artefato'
+       uses: actions/upload-artifact@v3
+       with:
+         name: dependency-review-report
+         path: dependency-review-report.json 
+
+     - name: 'Adicionar Link ao Resumo'
+       run: |
+         echo "### Resumo de Dependências" >> $GITHUB_STEP_SUMMARY
+         echo "O relatório completo pode ser acessado [aqui](dependency-review-report.json)." >> $GITHUB_STEP_SUMMARY
