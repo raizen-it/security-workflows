@@ -8,23 +8,24 @@ jobs:
   dependency-review:
     runs-on: ubuntu-latest
     steps:
-     - name: 'Checkout Repository'
-       uses: actions/checkout@v4
+     - name: 'Executar Dependency Review'
+       uses: actions/dependency-review-action@v4
+       with:
+         fail-on-severity: high
+         output: json # Salva o resultado como JSON
 
-     - name: 'Executar Dependency Review (redirecionado)'
+     - name: 'Dividir Saída em Partes'
        run: |
-         actions/dependency-review-action@v4 > dependency-review-output.txt || true
+         split -b 900k dependency-review-report.json part_
 
-     - name: 'Salvar Relatório Completo como Artefato'
+     - name: 'Adicionar Primeira Parte ao Summary'
+       run: |
+         echo "### Parte 1 do Resumo" >> $GITHUB_STEP_SUMMARY
+         cat part_aa >> $GITHUB_STEP_SUMMARY || true
+
+     - name: 'Salvar Partes Restantes como Artefato'
        uses: actions/upload-artifact@v3
        with:
-         name: dependency-review-full-output
-         path: dependency-review-output.txt
-
-     - name: 'Adicionar Resumo Filtrado ao Summary'
-       run: |
-         head -n 100 dependency-review-output.txt > filtered-summary.txt
-         echo "### Resumo de Dependências (parcial)" >> $GITHUB_STEP_SUMMARY
-         cat filtered-summary.txt >> $GITHUB_STEP_SUMMARY
-         echo "Relatório completo disponível como artefato." >> $GITHUB_STEP_SUMMARY
+         name: dependency-review-parts
+         path: part_*
 
