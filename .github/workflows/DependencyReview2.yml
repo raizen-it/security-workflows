@@ -13,10 +13,10 @@ jobs:
      - name: 'Checkout Repository'
        uses: actions/checkout@v4
 
-     # Passo 2: Executar Dependency Review com Configuração Adicional
+     # Passo 2: Executar Dependency Review (Saída Redirecionada)
      - name: 'Executar Dependency Review'
        run: |
-         actions/dependency-review-action@v4 --show-openssf-scorecard false > dependency-review-output.log || true
+         actions/dependency-review-action@v4 > dependency-review-output.log || true
 
      # Passo 3: Verificar a Existência do Arquivo
      - name: 'Verificar Existência do Relatório'
