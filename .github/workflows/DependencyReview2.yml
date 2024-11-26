@@ -1,5 +1,4 @@
 name: 'Dependency Review'
-
 on: [pull_request]
 
 permissions:
@@ -9,49 +8,22 @@ jobs:
   dependency-review:
     runs-on: ubuntu-latest
     steps:
-     # Passo 1: Checkout do Repositório
      - name: 'Checkout Repository'
        uses: actions/checkout@v4
 
-     # Passo 2: Executar Dependency Review (Saída Redirecionada)
-     - name: 'Executar Dependency Review'
-       run: |
-         actions/dependency-review-action@v4 > dependency-review-output.log || true
+     - name: 'Dependency Review - Resumo Compacto'
+       uses: actions/dependency-review-action@v4
+       with:
+         fail-on-severity: high 
+         output: summary 
 
-     # Passo 3: Verificar a Existência do Arquivo
-     - name: 'Verificar Existência do Relatório'
-       run: |
-         if [ -f dependency-review-output.log ]; then
-           echo "Arquivo de saída gerado com sucesso!"
-         else
-           echo "Arquivo de saída NÃO encontrado!" && exit 1
-         fi
-
-     # Passo 4: Dividir o Relatório em Partes Menores
-     - name: 'Dividir Saída em Partes'
-       run: |
-         split -b 900k dependency-review-output.log part_
-
-     # Passo 5: Adicionar Resumo Filtrado ao Summary
-     - name: 'Adicionar Resumo Filtrado'
-       run: |
-         echo "### Resumo de Vulnerabilidades Críticas" >> $GITHUB_STEP_SUMMARY
-         if [ -f part_aa ]; then
-           grep -i 'high severity' part_aa >> $GITHUB_STEP_SUMMARY || echo "Nenhuma vulnerabilidade crítica encontrada."
-         else
-           echo "Nenhuma parte gerada para adicionar ao resumo." >> $GITHUB_STEP_SUMMARY
-         fi
-
-     # Passo 6: Salvar Relatório Completo como Artefato
      - name: 'Salvar Relatório Completo como Artefato'
        uses: actions/upload-artifact@v3
        with:
-         name: dependency-review-full
-         path: dependency-review-output.log
+         name: dependency-review-report
+         path: dependency-review-report.json 
 
-     # Passo 7: Salvar Partes Divididas como Artefatos
-     - name: 'Salvar Partes Divididas como Artefato'
-       uses: actions/upload-artifact@v3
-       with:
-         name: dependency-review-parts
-         path: part_*
+     - name: 'Adicionar Link ao Resumo'
+       run: |
+         echo "### Resumo de Dependências" >> $GITHUB_STEP_SUMMARY
+         echo "O relatório completo pode ser acessado [aqui](dependency-review-report.json)." >> $GITHUB_STEP_SUMMARY
