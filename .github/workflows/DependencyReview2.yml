@@ -26,4 +26,4 @@ jobs:
      - name: 'Adicionar Link ao Resumo'
        run: |
          echo "### Resumo de Dependências" >> $GITHUB_STEP_SUMMARY
-         echo "O relatório completo pode ser acessado [aqui](dependency-review-report.json)." >> $GITHUB_STEP_SUMMARY
+         echo "O relatório completo pode ser acessado [aqui](./dependency-review-report.json)." >> $GITHUB_STEP_SUMMARY
